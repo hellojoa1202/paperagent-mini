@@ -4,6 +4,7 @@
 
 원본 AgentLaboratory 코드
 - https://github.com/SamuelSchmidgall/AgentLaboratory
+
 -> 해당 사이트에서 전체 git clone 하고 패키지 다운 필요
 
 ## 구성
@@ -33,6 +34,17 @@ Ollama를 사용할 경우:
 ```bash
 ollama pull qwen2.5:7b
 ```
+
+## 환경 설정
+
+`1st_folder/.env.example`을 참고해서 실행용 `.env`를 만들면 됩니다.
+
+```bash
+cd 1st_folder
+cp .env.example .env
+```
+
+기본 설정은 개인 API 키가 필요 없는 Ollama 사용 방식입니다. OpenAI를 쓰고 싶다면 `.env.example` 아래쪽의 OpenAI 옵션 주석을 풀고, 개인 API 키는 로컬 `.env`에만 넣어주세요.
 
 ## 참고
 
