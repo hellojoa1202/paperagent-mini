@@ -1,0 +1,22 @@
+[project]
+name = "paperagent-merged"
+version = "0.1.0"
+description = "Merged GY/SH assignment implementation for a paper-reading agent"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "arxiv>=2.1",
+    "mcp>=1.0",
+    "openai>=1.55",
+    "pypdf>=4.3",
+]
+
+[project.scripts]
+paperagent = "paperagent.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

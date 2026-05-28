@@ -1,51 +1,172 @@
-# PaperAgent Mini
+## 1. PaperAgent Merged 구현 현황
 
-2026-1 PROMETHEUS Agent Study toy-project
+~260528까지 나온 코드 폴더들 합쳐서 재구성
+현재 구현된 범위:
 
-원본 AgentLaboratory 코드
-- https://github.com/SamuelSchmidgall/AgentLaboratory
+1. arXiv에서 사용자가 입력한 주제 관련 논문 검색
+2. PDF 다운로드 및 텍스트 추출
+3. `PaperReaderAgent`가 논문별 한국어 요약 생성
+4. 논문 요약 모음 `paper_summaries.md` 저장
+5. 전체 문헌 리뷰 `final_literature_review.md` 생성
+6. `MethodExtractionAgent`가 구현 가능한 방법/수식/알고리즘 추출
+7. `PrototypePlannerAgent`가 구현 계획 생성
+8. `PrototypeWriterAgent`가 mock data 기반 `prototype.py`와 실행 README 생성
 
--> 해당 사이트에서 전체 git clone 하고 패키지 다운 필요
+현재 구현된 agent:
 
-## 구성
+- `PaperReaderAgent`
+- `MethodExtractionAgent`
+- `PrototypePlannerAgent`
+- `PrototypeWriterAgent`
+
+아직 구현하지 않은 agent:
+
+- `ReviewerAgent`
+- `PostdocAgent`
+- `ProfessorAgent`
+- `MLEngineerAgent`
+- `SWEngineerAgent`
+- `ExperimentReviewerAgent`
+- `NoveltyReviewerAgent`
+- `ImpactReviewerAgent`
+- `PaperSolver`
+- `MLESolver`
+- `AgentRxiv`
+
+생성되는 파일:
+
+- `outputs/paper_summaries.md`
+- `outputs/final_literature_review.md`
+- `outputs/method_extraction.md`
+- `outputs/implementation_plan.md`
+- `outputs/prototype.py`
+- `outputs/prototype_readme.md`
+
+## 2. 로컬 실행 방법
+
+먼저 Claude Desktop에 `paperagent-merged` MCP 서버를 연결 필요 (자세한 MCP 설정 방법은 노션에 있는 가이드 참고)
+
+기본 설정은 Ollama되어있고 .env에서 각자의 API 혹은 모델로 수정하면 됨 (**일단은 통일하지 않고 각자의 API 혹은 모델을 사용하는 것으로 결정**)
+
+Claude Desktop 실행 방법:
 
 ```text
-1st_folder/
-  paper_reader_agent.py   # 한 파일로 보는 기본 논문 읽기 agent
-
-2nd_folder/
-  llm.py                  # LLM 호출
-  arxiv_tool.py           # arXiv 검색 / PDF 읽기
-  agent.py                # 논문 요약 / 리뷰 작성 agent
-  workflow.py             # 전체 실행 흐름
-  main.py                 # 실행 진입점
+paperagent-merged MCP 실행해줘.
 ```
 
-## 추가 설치 필요
+그러면 Claude가 순서대로 물어봄
 
-필요 패키지:
+1. 찾아볼 논문 주제
+2. 읽을 논문 개수
+3. `prototype.py`까지 만들지 여부
+
+답변을 주면 Claude가 그 값을 모아서 `run_paper_literature_review`를 실행합니다.
+
+예시 대화:
+
+```text
+사용자: paperagent-merged MCP 실행해줘.
+Claude: 어떤 주제로 논문 리뷰를 돌릴까요?
+사용자: VLA failure detection
+Claude: 논문 몇 개를 읽을까요?
+사용자: 3개
+Claude: prototype.py까지 만들까요?
+사용자: 네
+```
+
+한 번에 실행하고 싶으면 이렇게 말해도 됨
+
+```text
+paperagent-merged MCP를 사용해서 "multi-agent systems for scientific discovery" 주제로 arXiv 논문 3개를 찾아서 읽고,
+논문 요약, 최종 문헌 리뷰, 구현 가능한 방법 추출, 구현 계획, prototype.py까지 만들어줘.
+```
+CLI로 직접 실행할 수도 있습니당
 
 ```bash
-pip install openai arxiv pypdf
+python -m paperagent run "여기에_찾아볼_논문_주제" --max-papers 3
 ```
 
-Ollama를 사용할 경우:
+## 3. 앞으로 구현해야 할 방향
 
-```bash
-ollama pull qwen2.5:7b
-```
+최종 목표는 AgentLaboratory처럼 여러 agent가 역할을 나누어 논문 조사, 평가, 구현 계획, 프로토타입, 보고서 작성을 수행하는 paper agent 시스템입니다.
 
-## 환경 설정
+우선적으로 추가하면 좋은 agent:
 
-`1st_folder/.env.example`을 참고해서 실행용 `.env`를 만들면 됩니다.
+1. `ReviewerAgent`
+   - 논문 요약이 원문 abstract/PDF 내용과 맞는지 평가하고 피드백을 주는 agent
 
-```bash
-cd 1st_folder
-cp .env.example .env
-```
+2. `PostdocAgent`
+   - 여러 논문 요약을 더 깊게 비교하고 연구 흐름, 공통 방법론, 빈틈을 정리하는 agent
 
-기본 설정은 개인 API 키가 필요 없는 Ollama 사용 방식입니다. OpenAI를 쓰고 싶다면 `.env.example` 아래쪽의 OpenAI 옵션 주석을 풀고, 개인 API 키는 로컬 `.env`에만 넣어주세요.
+3. `ProfessorAgent`
+   - 최종 보고서, README, paper draft를 정리하는 agent
 
-## 참고
+4. `NoveltyReviewerAgent` / `ImpactReviewerAgent`
+   - 기존 논문 대비 novelty, 연구 의의, 활용 가능성을 평가하는 agent
 
-이 프로젝트는 AgentLaboratory 원본 전체를 재구현하는 것이 아니라, 그중 문헌 조사 단계의 아이디어를 참고해 논문 검색, PDF 읽기, 요약, 최종 literature review 생성을 작게 구현한 학습용 프로젝트입니다.
+5. `SWEngineerAgent` / `MLEngineerAgent`
+   - 생성된 prototype 코드를 정리하거나, 실제 실험 코드 구조로 발전시키는 agent
+
+구현할 때 기본 목표:
+
+- `agents.py`에 agent class 추가
+- `workflow.py`에 agent 실행 단계 연결
+- 결과를 markdown 또는 code 파일로 저장
+- 가능하면 MCP tool 실행 결과에도 새 산출물 경로가 보이게 수정
+
+자세한 후보 agent와 프로젝트 방향성은 `AGENT_ROADMAP.md`를 참고하세요.
+
+---------------------
+
+## 4. 과제 설명
+
+이번 과제의 목표는 각자 환경에서 paper agent 시스템이 Claude Desktop MCP로 연결되는지 확인하고, 현재 구현된 코드의 성능을 확인한 뒤, 각자 agent 하나씩 추가해서 AgentLaboratory와 비슷한 multi-agent 시스템으로 확장하는 것입니다.
+
+### 과제 1. Claude Desktop 설치 및 MCP 연결 확인
+
+각자 Claude Desktop을 설치하고, `paperagent-merged` MCP 서버를 연결해 봅니다.
+
+확인할 것:
+
+- Claude Desktop에서 `paperagent-merged` MCP tool이 보이는지
+- `paperagent-merged MCP 실행해줘`라고 입력했을 때 Claude가 주제/논문 개수/prototype 여부를 물어보는지
+- 답변 후 `run_paper_literature_review` tool이 호출되는지
+- 실행 결과 파일이 `outputs/`에 생성되는지
+
+### 과제 2. 각자 모델/API 연결 후 현재 코드 성능 확인
+
+각자 가능한 방식으로 LLM을 연결해서 현재 구현된 agent pipeline을 실행해 봅니다.
+
+가능한 선택지:
+
+- OpenAI API
+- EXAONE
+- Ollama
+- 그 외 OpenAI-compatible local server
+
+확인할 것:
+
+- 논문 검색이 정상적으로 되는지
+- 논문 요약 품질이 괜찮은지
+- 최종 literature review가 쓸 만한지
+- `method_extraction.md`, `implementation_plan.md`, `prototype.py`가 실제로 도움이 되는지
+
+### 과제 3. 5명이 각자 다른 agent 하나씩 추가하기 (이거는 다음주까지는 꼭 안해도... 되긴 합니다!)
+
+현재 구현된 agent 위에 각자 하나씩 agent를 추가해서 시스템을 확장합니다.
+
+임의 역할 배정:
+
+| 이름 | 담당 agent | 역할 |
+|---|---|---|
+| 조아 | `ReviewerAgent` | 논문 요약이 원문 abstract/PDF 내용과 맞는지 평가하고 피드백 생성 |
+| 정민 | `PostdocAgent` | 여러 논문 요약을 비교해 연구 흐름, 공통 방법론, 빈틈 정리 |
+| 승현 | `ProfessorAgent` | 최종 보고서, README, paper draft 형태로 결과 정리 |
+| 경륜 | `NoveltyReviewerAgent` | 기존 논문 대비 novelty와 차별점 평가 |
+| 지윤 | `MLEngineerAgent` | 생성된 prototype을 실제 실험 코드 구조로 발전 |
+
+각자 구현 후 확인할 것:
+
+- 새 agent가 기존 workflow에 자연스럽게 연결되는지
+- 새 agent의 결과물이 파일로 저장되는지
+- Claude MCP 실행 결과에서 새 산출물을 확인할 수 있는지

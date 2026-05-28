@@ -1,0 +1,37 @@
+# 환경/시크릿
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# venv (uv가 만드는 .venv)
+.venv/
+venv/
+
+# 빌드/배포
+build/
+dist/
+*.egg-info/
+
+# 테스트/캐시
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# 산출물 (PDF 다운로드 임시파일, 큰 결과 등)
+outputs/*.pdf
+outputs/review_*.md
+!outputs/.gitkeep
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
