@@ -86,6 +86,9 @@ CLI로 직접 실행할 수도 있습니당
 python -m paperagent run "여기에_찾아볼_논문_주제" --max-papers 3
 ```
 
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/9bb3a7e8-65ef-438f-b361-cdb878fc0201" />
+
+
 ## 3. 앞으로 구현해야 할 방향
 
 최종 목표는 AgentLaboratory처럼 여러 agent가 역할을 나누어 논문 조사, 평가, 구현 계획, 프로토타입, 보고서 작성을 수행하는 paper agent 시스템입니다.
