@@ -64,8 +64,6 @@ paperagent-merged MCP 실행해줘.
 
 예시 대화:
 
-![Claude Desktop MCP 실행 예시](assets/claude-mcp-run-example.svg)
-
 ```text
 사용자: paperagent-merged MCP 실행해줘.
 Claude: 어떤 주제로 논문 리뷰를 돌릴까요?
