@@ -151,19 +151,58 @@ python -m paperagent run "여기에_찾아볼_논문_주제" --max-papers 3
 - 최종 literature review가 쓸 만한지
 - `method_extraction.md`, `implementation_plan.md`, `prototype.py`가 실제로 도움이 되는지
 
-### 과제 3. 5명이 각자 다른 agent 하나씩 추가하기 (이거는 다음주까지는 꼭 안해도... 되긴 합니다!)
+### 과제 3. 요약본/실행 흐름 다듬어오기
 
-현재 구현된 agent 위에 각자 하나씩 agent를 추가해서 시스템을 확장합니다.
+현재 논문 요약본과 최종 literature review는 prompt가 임의로 작성되어 있어서 결과가 길거나, 섹션이 어색하거나, 한눈에 보기 어려울 수 있습니다. 각자 실행해 보면서 더 읽기 좋은 형태로 prompt와 출력 형식을 다듬어 옵니다.
 
-임의 역할 배정:
+해볼 것:
 
-| 이름 | 담당 agent | 역할 |
-|---|---|---|
-| 조아 | `ReviewerAgent` | 논문 요약이 원문 abstract/PDF 내용과 맞는지 평가하고 피드백 생성 |
-| 정민 | `PostdocAgent` | 여러 논문 요약을 비교해 연구 흐름, 공통 방법론, 빈틈 정리 |
-| 승현 | `ProfessorAgent` | 최종 보고서, README, paper draft 형태로 결과 정리 |
-| 경륜 | `NoveltyReviewerAgent` | 기존 논문 대비 novelty와 차별점 평가 |
-| 지윤 | `MLEngineerAgent` | 생성된 prototype을 실제 실험 코드 구조로 발전 |
+- `agents.py`의 요약 prompt를 더 보기 좋게 수정
+- `final_literature_review.md`가 표/불릿/짧은 섹션 중심으로 나오도록 prompt 개선
+- Claude 창에 뜨는 간단 미리보기가 너무 길거나 불친절하면 `mcp_paperagent_server.py`의 응답 형식 개선
+- README의 실행 방법이 헷갈리는 부분이 있으면 더 자연스럽게 수정
+- 본인이 생각하기에 "논문 읽는 agent 시스템"답게 보이도록 출력 형식 정리
+
+프롬프팅 예시:
+
+```text
+반드시 아래 형식으로 작성하세요:
+1. 한 문장 요약
+2. 핵심 기여 3개
+3. 방법론 단계별 설명
+4. 실험 결과 표
+5. 한계점
+6. 우리 프로젝트에 쓸 수 있는 아이디어
+
+각 섹션은 너무 길지 않게 bullet point 중심으로 작성하세요.
+```
+
+확인할 것:
+
+- `paper_summaries.md`가 읽기 쉬운지
+- `final_literature_review.md`가 한눈에 비교 가능한지
+- Claude Desktop 실행 결과가 사용자가 바로 이해할 수 있는지
+- 실행 방법 문서가 팀원이 따라하기 쉬운지
+
+### 과제 4. Agent 추가하기 (~6/24)
+
+현재 구현된 agent 위에 각자 다른 agent를 추가해서 AgentLaboratory와 비슷한 multi-agent 시스템으로 확장합니다.
+
+추가 후보 agent:
+
+| Agent | 역할 |
+|---|---|
+| `ReviewerAgent` | 논문 요약이 원문 abstract/PDF 내용과 맞는지 평가하고 피드백 생성 |
+| `PostdocAgent` | 여러 논문 요약을 비교해 연구 흐름, 공통 방법론, 빈틈 정리 |
+| `ProfessorAgent` | 최종 보고서, README, paper draft 형태로 결과 정리 |
+| `MLEngineerAgent` | 생성된 prototype을 실제 실험 코드 구조로 발전 |
+| `SWEngineerAgent` | 생성 코드 정리, 테스트 추가, 실행 구조 개선 |
+| `ExperimentReviewerAgent` | 실험 설계, metric, baseline, ablation이 충분한지 평가 |
+| `NoveltyReviewerAgent` | 기존 논문 대비 novelty와 차별점 평가 |
+| `ImpactReviewerAgent` | 연구 의의, 활용 가능성, 한계, impact 평가 |
+| `PaperSolver` | 문헌 리뷰와 결과를 논문 초안 형태로 작성 |
+| `MLESolver` | 실험 코드 생성/수정/실행 루프 담당 |
+| `AgentRxiv` | 읽은 논문, 요약, metadata를 저장하고 다시 검색 |
 
 각자 구현 후 확인할 것:
 
