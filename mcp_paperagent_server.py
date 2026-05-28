@@ -43,7 +43,8 @@ def start_paperagent_review() -> str:
         "1. 찾아볼 논문 주제(topic)를 물어보세요.\n"
         "2. 읽을 논문 개수(max_papers)를 물어보세요. 사용자가 모르겠다고 하면 3개를 사용하세요.\n"
         "3. prototype.py까지 만들지(enable_prototype)를 물어보세요. 사용자가 모르겠다고 하면 true를 사용하세요.\n"
-        "4. 세 답변을 모아 `run_paper_literature_review(topic, max_papers, enable_prototype)`를 실행하세요."
+        "4. 세 답변을 모아 `run_paper_literature_review(topic, max_papers, enable_prototype)`를 실행하세요.\n"
+        "5. tool 실행이 끝나면 반환된 '채팅창 표시용 요약' 표를 사용자에게 그대로 보여주세요."
     )
 
 
@@ -76,8 +77,8 @@ def run_paper_literature_review(
 
 
 def _render_mcp_response(result) -> str:
-    paper_titles = _extract_paper_titles(result.paper_summaries_path)
-    review_preview = _read_markdown_preview(result.final_review_path, max_chars=1800)
+    paper_rows = _extract_paper_table_rows(result.paper_summaries_path)
+    review_summary = _extract_review_summary(result.final_review_path)
 
     optional_paths = [
         ("구현 가능 방법 추출", result.method_extraction_path),
@@ -91,36 +92,70 @@ def _render_mcp_response(result) -> str:
 
     return (
         "# PaperAgent 실행 완료\n\n"
+        "아래는 **채팅창 표시용 요약**입니다. 자세한 내용은 저장된 파일을 확인하세요.\n\n"
         f"- 주제: **{result.topic}**\n"
         f"- 읽은 논문 수: **{result.paper_count}개**\n"
         f"- 출력 폴더: `{result.output_dir}`\n\n"
-        "## 읽은 논문\n\n"
-        f"{paper_titles}\n\n"
-        "## 최종 문헌 리뷰 간단 미리보기\n\n"
-        f"{review_preview}\n\n"
+        "## 읽은 논문 요약표\n\n"
+        "| # | 논문 | 아주 짧은 요약 |\n"
+        "|---|---|---|\n"
+        f"{paper_rows}\n\n"
+        "## 전체 리뷰 한줄 요약\n\n"
+        f"{review_summary}\n\n"
         "## 저장된 파일\n\n"
         f"- 논문별 요약: `{result.paper_summaries_path}`\n"
         f"- 최종 문헌 리뷰: `{result.final_review_path}`\n"
         f"{chr(10).join(optional_lines)}\n\n"
-        "전체 내용은 위 파일들에서 확인하면 됩니다."
+        "Claude는 위 표와 한줄 요약을 사용자에게 그대로 보여주고, 필요하면 저장 파일을 열어 더 자세히 보면 됩니다."
     )
 
 
-def _extract_paper_titles(path: Path) -> str:
+def _extract_paper_table_rows(path: Path) -> str:
     text = path.read_text(encoding="utf-8")
-    titles = re.findall(r"^##\s+\d+\.\s+(.+)$", text, flags=re.MULTILINE)
-    if not titles:
-        return "- 논문 제목을 자동 추출하지 못했습니다. `paper_summaries.md`를 확인하세요."
-    return "\n".join(f"{index}. {title}" for index, title in enumerate(titles, start=1))
+    matches = list(re.finditer(r"^##\s+(\d+)\.\s+(.+)$", text, flags=re.MULTILINE))
+    if not matches:
+        return "| - | 제목 추출 실패 | `paper_summaries.md`를 확인하세요. |"
+
+    rows: list[str] = []
+    for position, match in enumerate(matches):
+        number = match.group(1)
+        title = _table_cell(match.group(2))
+        start = match.end()
+        end = matches[position + 1].start() if position + 1 < len(matches) else len(text)
+        block = text[start:end]
+        short_summary = _table_cell(_shorten(_first_meaningful_line(block), 120))
+        rows.append(f"| {number} | {title} | {short_summary} |")
+    return "\n".join(rows)
 
 
-def _read_markdown_preview(path: Path, max_chars: int) -> str:
+def _extract_review_summary(path: Path) -> str:
     text = path.read_text(encoding="utf-8").strip()
     text = re.sub(r"\n{3,}", "\n\n", text)
+    line = _first_meaningful_line(text)
+    return _shorten(line, 220) if line else f"전체 리뷰는 `{path}`에 저장되었습니다."
+
+
+def _first_meaningful_line(text: str) -> str:
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith(("#", "-", "*", "|", "---")):
+            continue
+        if line.startswith("**arXiv ID**"):
+            continue
+        return re.sub(r"\s+", " ", line)
+    return ""
+
+
+def _shorten(text: str, max_chars: int) -> str:
     if len(text) <= max_chars:
         return text
-    cut = text[:max_chars].rsplit("\n", 1)[0].strip()
-    return f"{cut}\n\n...(미리보기 생략: 전체 내용은 `{path}`에서 확인)"
+    return text[: max_chars - 1].rstrip() + "…"
+
+
+def _table_cell(text: str) -> str:
+    return text.replace("|", "/").replace("\n", " ").strip()
 
 
 if __name__ == "__main__":
