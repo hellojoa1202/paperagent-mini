@@ -64,6 +64,8 @@ paperagent-merged MCP 실행해줘.
 
 예시 대화:
 
+![Claude Desktop MCP 실행 예시](assets/claude-mcp-run-example.svg)
+
 ```text
 사용자: paperagent-merged MCP 실행해줘.
 Claude: 어떤 주제로 논문 리뷰를 돌릴까요?
@@ -120,11 +122,9 @@ python -m paperagent run "여기에_찾아볼_논문_주제" --max-papers 3
 
 ## 4. 과제 설명
 
-이번 과제의 목표는 각자 환경에서 paper agent 시스템이 Claude Desktop MCP로 연결되는지 확인하고, 현재 구현된 코드의 성능을 확인한 뒤, 각자 agent 하나씩 추가해서 AgentLaboratory와 비슷한 multi-agent 시스템으로 확장하는 것입니다.
-
 ### 과제 1. Claude Desktop 설치 및 MCP 연결 확인
 
-각자 Claude Desktop을 설치하고, `paperagent-merged` MCP 서버를 연결해 봅니다.
+각자 Claude Desktop을 설치하고, `paperagent-merged` MCP 서버를 연결해보기
 
 확인할 것:
 
@@ -135,14 +135,7 @@ python -m paperagent run "여기에_찾아볼_논문_주제" --max-papers 3
 
 ### 과제 2. 각자 모델/API 연결 후 현재 코드 성능 확인
 
-각자 가능한 방식으로 LLM을 연결해서 현재 구현된 agent pipeline을 실행해 봅니다.
-
-가능한 선택지:
-
-- OpenAI API
-- EXAONE
-- Ollama
-- 그 외 OpenAI-compatible local server
+각자 가능한 방식으로 LLM을 연결해서 현재 구현된 agent pipeline을 실행해보기
 
 확인할 것:
 
@@ -153,29 +146,12 @@ python -m paperagent run "여기에_찾아볼_논문_주제" --max-papers 3
 
 ### 과제 3. 요약본/실행 흐름 다듬어오기
 
-현재 논문 요약본과 최종 literature review는 prompt가 임의로 작성되어 있어서 결과가 길거나, 섹션이 어색하거나, 한눈에 보기 어려울 수 있습니다. 각자 실행해 보면서 더 읽기 좋은 형태로 prompt와 출력 형식을 다듬어 옵니다.
+현재 논문 요약본과 최종 literature review는 prompt가 임의로 작성되어있음 -> 다듬기 필요
 
 해볼 것:
 
-- `agents.py`의 요약 prompt를 더 보기 좋게 수정
-- `final_literature_review.md`가 표/불릿/짧은 섹션 중심으로 나오도록 prompt 개선
-- Claude 창에 뜨는 간단 미리보기가 너무 길거나 불친절하면 `mcp_paperagent_server.py`의 응답 형식 개선
-- README의 실행 방법이 헷갈리는 부분이 있으면 더 자연스럽게 수정
-- 본인이 생각하기에 "논문 읽는 agent 시스템"답게 보이도록 출력 형식 정리
-
-프롬프팅 예시:
-
-```text
-반드시 아래 형식으로 작성하세요:
-1. 한 문장 요약
-2. 핵심 기여 3개
-3. 방법론 단계별 설명
-4. 실험 결과 표
-5. 한계점
-6. 우리 프로젝트에 쓸 수 있는 아이디어
-
-각 섹션은 너무 길지 않게 bullet point 중심으로 작성하세요.
-```
+- 현재 나오는 결과 파일들을 보고 이해하기 쉽게 수정 (필요한 요소들은 추가하고, 불필요한 요소들은 삭제)
+- 결과 파일 생성 동시에 클로드 대화창에도 저장되었다는 알림과 리뷰 관련 정보 (~~이런 논문들을 찾았고 각각의 논문들 한줄요약?)이 뜨게 수정
 
 확인할 것:
 
@@ -186,7 +162,7 @@ python -m paperagent run "여기에_찾아볼_논문_주제" --max-papers 3
 
 ### 과제 4. Agent 추가하기 (~6/24)
 
-현재 구현된 agent 위에 각자 다른 agent를 추가해서 AgentLaboratory와 비슷한 multi-agent 시스템으로 확장합니다.
+현재 구현된 agent 위에 각자 다른 agent를 추가해서 AgentLaboratory와 비슷한 multi-agent 시스템으로 확장
 
 추가 후보 agent:
 
