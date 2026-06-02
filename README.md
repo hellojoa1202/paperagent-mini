@@ -60,7 +60,7 @@ paperagent-merged MCP 실행해줘.
 2. 읽을 논문 개수
 3. `prototype.py`까지 만들지 여부
 
-답변을 주면 Claude가 그 값을 모아서 `run_paper_literature_review`를 실행합니다.
+답변을 주면 Claude가 그 값을 모아서 `run_paper_literature_review`를 실행
 
 예시 대화:
 
@@ -117,7 +117,7 @@ python -m paperagent run "여기에_찾아볼_논문_주제" --max-papers 3
 - 결과를 markdown 또는 code 파일로 저장
 - 가능하면 MCP tool 실행 결과에도 새 산출물 경로가 보이게 수정
 
-자세한 후보 agent와 프로젝트 방향성은 `AGENT_ROADMAP.md`를 참고하세요.
+자세한 후보 agent와 프로젝트 방향성은 `AGENT_ROADMAP.md`를 참고
 
 ---------------------
 
