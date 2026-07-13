@@ -1,49 +1,33 @@
-# JY — Postdoc, Critic, Professor Prompt & Report Quality
+# JY — Agent 프롬프트 및 최종 보고서 개선
 
-기존 과제의 Literature Review prompt 작업을 이어서 `PostdocAgent`, `CriticAgent`,
-`ProfessorAgent`의 프롬프트와 최종 `research_report.md`의 가독성을 개선합니다. 새 Agent나
-workflow는 만들지 않습니다.
+## 맡은 부분
 
-## 실행
+여러 논문을 종합하고 검토한 뒤 최종 `research_report.md`로 정리하는 프롬프트 부분을 맡습니다.
+
+## 해주면 되는 일
+
+- `PostdocAgent`가 여러 논문의 흐름과 차이점을 깔끔하게 정리하도록 prompt를 수정해 주세요.
+- `CriticAgent`가 근거가 약하거나 빠진 내용을 구체적으로 알려주도록 prompt를 수정해 주세요.
+- `ProfessorAgent`가 최종 보고서를 짧은 불릿 중심으로 작성하도록 prompt를 수정해 주세요.
+- 보고서에 중국어, 반복 문장, 빈 항목, 잘못된 Paper Link가 없는지 확인해 주세요.
+- 몇 가지 보고서로 실행해 보고 결과를 이 README 아래에 간단히 적어주세요.
+
+## 현재 폴더 파일
+
+- `report_quality.py`: 세 Agent의 prompt와 보고서 검사 방식 예시
+- `run_report_check.py`: 보고서를 검사하거나 각 prompt를 실행해 보는 파일
+- `sample_report.md`: 바로 검사해 볼 수 있는 보고서 예시
+- `test_report_quality.py`: 간단한 테스트 예시
+- `.env.example`: JY가 사용하던 `qwen2.5:7b` 또는 OpenAI 설정 예시
+
+현재 코드는 시작하기 위한 참고용입니다. 필요한 부분은 자유롭게 수정해도 됩니다.
+
+## 시작 방법
 
 ```bash
 git checkout -b 3rd-JY
 cp team_tasks/JY/.env.example team_tasks/JY/.env
 python team_tasks/JY/run_report_check.py team_tasks/JY/sample_report.md
-python team_tasks/JY/run_report_check.py team_tasks/JY/sample_report.md --generate postdoc
-python team_tasks/JY/run_report_check.py team_tasks/JY/sample_report.md --generate critic
-python team_tasks/JY/run_report_check.py team_tasks/JY/sample_report.md --generate professor
-python -m pytest team_tasks/JY/test_report_quality.py
 ```
 
-`--generate` 없이 실행하면 API 호출 없이 보고서 형식만 검사합니다.
-
-## 할 일
-
-복잡한 Agent나 pipeline을 새로 만들지 않고, 아래 기능을 하나씩 완성합니다.
-
-1. `build_postdoc_prompt()`로 연구 흐름, 논문 비교, 공통 방법, open problem 형식 개선
-2. `build_critic_prompt()`로 근거가 약한 주장과 빠진 관점을 구체적으로 지적
-3. `build_professor_prompt()`로 구현 내용, 한계, 다음 단계를 짧은 불릿으로 정리
-4. 입력에 없는 수치나 구현 내용을 만들지 않도록 세 프롬프트에 공통 제한 추가
-5. 한자·중국어·일본어 문자를 찾는 검사
-6. 같은 문장, 필수 섹션, 빈 섹션 검사
-7. Paper Link와 prototype 관련 문구 검사
-8. 세 프롬프트의 결과를 서로 다른 입력으로 비교
-9. 정상 보고서와 오류 보고서 테스트 작성
-
-LLM 성능 평가, 새 Agent 작성, workflow 재설계는 하지 않습니다. 대부분 문자열 검색, 정규식,
-파일 목록 확인으로 해결할 수 있는 작업입니다. 한 기능씩 구현하고 테스트하면 됩니다.
-
-## 완료 기준
-
-- 한국어와 필요한 영문 기술 용어만 출력함
-- 같은 문장 또는 섹션이 반복되지 않음
-- 필수 섹션 누락을 검사함
-- 기본 산출물은 `research_report.md`, prototype 선택 시에만 `prototype.py`가 생성됨
-- 총 6개의 보고서 샘플에 대한 검사 결과가 README에 있음
-
-## 통합 계약
-
-조아가 통합할 대상은 `build_postdoc_prompt`, `build_critic_prompt`, `build_professor_prompt`,
-`ReportCheck`, `check_report`입니다. 각각 기존 Agent의 prompt로 옮기며 UI와 파일 개수는 변경하지 않습니다.
+작업이 끝나면 `3rd-JY` 브랜치에 push하고 조아에게 알려주세요.

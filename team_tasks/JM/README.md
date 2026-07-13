@@ -1,45 +1,35 @@
-# JM — ResearchGapAgent & Pipeline Integration
+# JM — ResearchGapAgent 추가
 
-기존 과제에서 전체 multi-agent 구조와 전문 Reviewer들을 확장했으므로, 이번에는 실제 다음 행동을
-만드는 `ResearchGapAgent` 하나를 추가하고 실제 workflow에 연결합니다. Reviewer를 더 늘리는 것이
-아니라 검토된 문헌을 작고 검증 가능한 후속 실험으로 바꾸는 역할입니다.
+## 맡은 부분
 
-## 실행
+여러 논문을 검토한 결과에서 아직 해결되지 않은 문제를 찾고, 다음에 해볼 실험을 제안하는 부분을
+맡습니다.
+
+## 해주면 되는 일
+
+- `ResearchGapAgent`가 논문들의 공통 한계를 찾도록 만들어 주세요.
+- 공통 한계를 바탕으로 다음에 해볼 만한 실험을 제안하게 해주세요.
+- 실험에는 가설, 비교 방법, 평가 기준, 참고 논문이 포함되게 해주세요.
+- 결과가 `research_report.md`의 `Next Experiments` 부분에 들어갈 수 있게 정리해 주세요.
+- 몇 가지 주제로 실행해 보고 결과를 이 README 아래에 간단히 적어주세요.
+
+## 현재 폴더 파일
+
+- `research_gap_agent.py`: `ResearchGapAgent`와 보고서 연결 방식 예시
+- `run_research_gap.py`: Agent를 실행해 보는 파일
+- `sample_literature.md`: 바로 실행해 볼 수 있는 문헌 예시
+- `test_research_gap_agent.py`: 간단한 테스트 예시
+- `.env.example`: JM이 사용하던 `qwen3:8b` 설정 예시
+
+현재 코드는 시작하기 위한 참고용입니다. 필요한 부분은 자유롭게 수정해도 됩니다.
+루트 pipeline에 바로 합치지 말고 우선 이 폴더에서 정상 작동하도록 완성해 주세요.
+
+## 시작 방법
 
 ```bash
 git checkout -b 3rd-JM
 cp team_tasks/JM/.env.example team_tasks/JM/.env
 python team_tasks/JM/run_research_gap.py team_tasks/JM/sample_literature.md --topic "efficient transformer"
-python team_tasks/JM/run_research_gap.py team_tasks/JM/sample_literature.md --topic "efficient transformer" --report team_tasks/JY/sample_report.md
-python -m pytest team_tasks/JM/test_research_gap_agent.py
 ```
 
-## 할 일
-
-1. `ResearchGapAgent.propose()` prompt 개선
-2. 가설, baseline, metric, ablation, risk, 근거 논문 형식 고정
-3. 1~2주 안에 가능한 토이 실험을 우선하도록 조정
-4. 필수 필드 누락 검사
-5. 동일한 제안 반복 검사
-6. Critic 다음, Prototype 이전에 실행되도록 pipeline 단계 설계
-7. 체크포인트에 `research_gap` 단계를 저장하고 재실행 시 복원
-8. 결과를 `research_report.md`의 `Next Experiments` 섹션에 병합
-9. Agent 단위 테스트와 report 병합 테스트 작성
-10. 서로 다른 주제 3개로 실험
-
-새 Agent는 `ResearchGapAgent` 하나만 구현합니다. 여러 Agent의 토론, 자동 ranking, 외부 논문 추가
-검색은 범위에서 제외합니다.
-
-## 완료 기준
-
-- 요청한 개수만큼 구조화된 제안을 생성함
-- 모든 제안에 근거 논문이 있음
-- baseline과 metric이 빠지지 않음
-- 같은 아이디어를 표현만 바꿔 반복하지 않음
-- 중단 후 재실행해도 완료된 ResearchGap 결과를 다시 생성하지 않음
-- 별도 Markdown 산출물을 늘리지 않고 기존 보고서에 포함함
-
-## 통합 계약
-
-조아가 통합할 대상은 `ResearchGapAgent`, `run_research_gap_stage`, `append_next_experiments`,
-`validate_gap_output`입니다. 최종 pipeline에서는 Critic 이후, Prototype 계획 이전에 들어갑니다.
+작업이 끝나면 `3rd-JM` 브랜치에 push하고 조아에게 알려주세요.
