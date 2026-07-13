@@ -1,0 +1,1 @@
+"""JY report-prompt workspace."""

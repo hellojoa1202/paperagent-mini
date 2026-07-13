@@ -15,8 +15,9 @@ venv/
 
 # 빌드/배포
 build/
-dist/
+/dist/
 *.egg-info/
+ui_mockup/node_modules/
 
 # 테스트/캐시
 .pytest_cache/
@@ -24,10 +25,11 @@ dist/
 htmlcov/
 .ruff_cache/
 
-# 산출물 (PDF 다운로드 임시파일, 큰 결과 등)
-outputs/*.pdf
-outputs/review_*.md
+# 실행 산출물
+outputs/*
 !outputs/.gitkeep
+team_tasks/*/.env
+team_tasks/*/outputs/
 
 # OS/IDE
 .DS_Store

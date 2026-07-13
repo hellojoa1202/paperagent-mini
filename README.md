@@ -1,185 +1,340 @@
-## 1. PaperAgent Merged 구현 현황
+# PaperAgent Mini
 
-~260528까지 나온 코드 폴더들 합쳐서 재구성
-현재 구현된 범위:
+Agent Laboratory의 연구 자동화 구조를 참고하여 만든 multi-agent 논문 조사 프로젝트입니다.
+사용자가 연구 주제를 입력하면 논문 검색부터 요약 검증, 문헌 종합, 연구 아이디어 평가,
+구현 계획 및 prototype 코드 작성까지 하나의 pipeline으로 실행합니다.
 
-1. arXiv에서 사용자가 입력한 주제 관련 논문 검색
-2. PDF 다운로드 및 텍스트 추출
-3. `PaperReaderAgent`가 논문별 한국어 요약 생성
-4. 논문 요약 모음 `paper_summaries.md` 저장
-5. 전체 문헌 리뷰 `final_literature_review.md` 생성
-6. `MethodExtractionAgent`가 구현 가능한 방법/수식/알고리즘 추출
-7. `PrototypePlannerAgent`가 구현 계획 생성
-8. `PrototypeWriterAgent`가 mock data 기반 `prototype.py`와 실행 README 생성
-
-현재 구현된 agent:
-
-- `PaperReaderAgent`
-- `MethodExtractionAgent`
-- `PrototypePlannerAgent`
-- `PrototypeWriterAgent`
-
-아직 구현하지 않은 agent:
-
-- `ReviewerAgent`
-- `PostdocAgent`
-- `ProfessorAgent`
-- `MLEngineerAgent`
-- `SWEngineerAgent`
-- `ExperimentReviewerAgent`
-- `NoveltyReviewerAgent`
-- `ImpactReviewerAgent`
-- `PaperSolver`
-- `MLESolver`
-- `AgentRxiv`
-
-생성되는 파일:
-
-- `outputs/paper_summaries.md`
-- `outputs/final_literature_review.md`
-- `outputs/method_extraction.md`
-- `outputs/implementation_plan.md`
-- `outputs/prototype.py`
-- `outputs/prototype_readme.md`
-
-## 2. 로컬 실행 방법
-
-먼저 Claude Desktop에 `paperagent-merged` MCP 서버를 연결 필요 (자세한 MCP 설정 방법은 노션에 있는 가이드 참고)
-
-기본 설정은 Ollama되어있고 .env에서 각자의 API 혹은 모델로 수정하면 됨 (**일단은 통일하지 않고 각자의 API 혹은 모델을 사용하는 것으로 결정**)
-
-Claude Desktop 실행 방법:
+## 전체 구조
 
 ```text
-paperagent-merged MCP 실행해줘.
+[Research Topic]
+       │
+       ▼
+┌──────────────────────┐
+│ 1. 논문 수집         │  arXiv 검색 → Abstract/PDF 추출
+└──────────┬───────────┘
+           ▼
+┌──────────────────────┐
+│ 2. 요약 생성·평가    │  PaperReader ⇄ Reviewer
+│                      │  기준 점수 미달 시 피드백 기반 재작성
+└──────────┬───────────┘
+           ▼
+┌──────────────────────┐
+│ 3. 문헌 종합·검토    │  Postdoc → Critic
+│                      │  ├─ Experiment Reviewer
+│                      │  ├─ Novelty Reviewer
+│                      │  └─ Impact Reviewer
+└──────────┬───────────┘
+           ▼
+┌──────────────────────┐
+│ 4. 구현 설계·코드화  │  Method Extractor → Planner → Writer
+└──────────┬───────────┘
+           ▼
+┌──────────────────────┐
+│ 5. 최종 보고         │  Professor Agent
+└──────────┬───────────┘
+           ▼
+     [outputs/ 산출물]
 ```
 
-그러면 Claude가 순서대로 물어봄
-
-1. 찾아볼 논문 주제
-2. 읽을 논문 개수
-3. `prototype.py`까지 만들지 여부
-
-답변을 주면 Claude가 그 값을 모아서 `run_paper_literature_review`를 실행합니다.
-
-예시 대화:
+CLI와 Claude Desktop MCP는 동일한 pipeline을 호출하는 서로 다른 실행 인터페이스입니다.
 
 ```text
-사용자: paperagent-merged MCP 실행해줘.
-Claude: 어떤 주제로 논문 리뷰를 돌릴까요?
-사용자: VLA failure detection
-Claude: 논문 몇 개를 읽을까요?
-사용자: 3개
-Claude: prototype.py까지 만들까요?
-사용자: 네
+CLI ─────────────┐
+                 ├── run_pipeline(...) ── Agent pipeline ── outputs/
+Claude Desktop ─ MCP
 ```
 
-한 번에 실행하고 싶으면 이렇게 말해도 됨
+## 3rd 스터디 역할별 작업 폴더
+
+현재 전체 프로젝트는 루트에서 실행하고, 네 명의 후속 과제는 [`team_tasks/`](./team_tasks/)에서
+각자 독립적으로 실험합니다. 팀원은 `3rd`를 기준으로 자기 브랜치와 이니셜 폴더만 수정합니다.
+
+| 담당 | 작업 폴더 | 목표 |
+|---|---|---|
+| GY | [`team_tasks/GY`](./team_tasks/GY/) | 요약·Reviewer reflection 성능 개선 |
+| SH | [`team_tasks/SH`](./team_tasks/SH/) | prototype 검증과 실패 시 수정 |
+| JM | [`team_tasks/JM`](./team_tasks/JM/) | research gap과 후속 실험 제안 |
+| JY | [`team_tasks/JY`](./team_tasks/JY/) | 최종 보고서 prompt와 형식 품질 개선 |
+
+UI와 MCP 연결은 완료 범위이므로 팀 과제에서 수정하지 않습니다. 상세 실행법과 완료 기준은 각 폴더의
+README에 있습니다.
+
+## Pipeline 구성
+
+### 1. 논문 수집
+
+사용자의 연구 주제를 arXiv 검색어로 변환하고 관련 논문을 가져옵니다.
 
 ```text
-paperagent-merged MCP를 사용해서 "multi-agent systems for scientific discovery" 주제로 arXiv 논문 3개를 찾아서 읽고,
-논문 요약, 최종 문헌 리뷰, 구현 가능한 방법 추출, 구현 계획, prototype.py까지 만들어줘.
+Research topic
+   └─ search_arxiv()
+       ├─ arXiv API 실검색
+       ├─ rate-limit 발생 시 제한된 횟수만큼 재시도
+       └─ read_arxiv_pdf()
+           ├─ PDF 다운로드
+           ├─ 텍스트 추출
+           └─ 분석 후 임시 PDF 삭제
 ```
-CLI로 직접 실행할 수도 있습니당
+
+검색 실패를 감추기 위한 고정 fallback 논문은 사용하지 않습니다. 빠른 확인이 필요한 경우에는
+PDF 전체 대신 arXiv abstract만 사용하도록 선택할 수 있습니다.
+
+### 2. 논문 요약 생성과 품질 개선
+
+논문을 한 번 요약하고 끝내지 않고, 작성 Agent와 평가 Agent가 피드백을 주고받습니다.
+
+```text
+Abstract/PDF text
+       │
+       ▼
+PaperReaderAgent
+       │  Problem / Key idea / Method / Experiments / Limitations
+       ▼
+ReviewerAgent
+       │  정확성·구체성·완결성·명료성을 1~10점으로 평가
+       │
+       ├─ score >= MIN_REVIEW_SCORE ──────────────┐
+       │                                          ▼
+       └─ score < MIN_REVIEW_SCORE          최종 요약 채택
+              │
+              └─ 구체적 feedback
+                       │
+                       └─ PaperReaderAgent 재작성
+                          (최대 MAX_REVISION_ROUNDS회)
+```
+
+Reviewer 응답은 점수, 강점, 약점, 수정 지시를 포함하는 JSON 구조로 요청합니다.
+JSON 형식이 깨져도 원문 응답을 버리지 않고 feedback에 보존합니다.
+
+### 3. 여러 논문 종합과 연구 관점 평가
+
+개별 논문 검증이 끝나면 전체 연구 흐름을 정리하고, 서로 다른 평가 관점으로 결과를 검토합니다.
+
+```text
+검증된 논문 요약들
+       │
+       ▼
+PostdocAgent
+       │  연구 동향 / 논문 비교 / 공통 방법 / 미해결 문제 종합
+       ▼
+Literature Review
+       ├─ CriticAgent
+       │    누락된 관점, 숨은 가정, 근거가 약한 주장 검토
+       │
+       └─ 선택적 병렬 평가
+            ├─ ExperimentReviewerAgent : metric, baseline, ablation
+            ├─ NoveltyReviewerAgent    : 차별성, 신규성, incremental risk
+            └─ ImpactReviewerAgent     : 활용 가능성, 연구 의의, 한계
+```
+
+Critic 검토는 문헌 리뷰에 포함됩니다. 세 가지 전문 Reviewer는 필요할 때만 실행하여
+추가 API 호출과 실행 시간을 조절할 수 있습니다.
+
+### 4. 구현 계획과 prototype 코드 생성
+
+문헌조사를 실제 개발 작업으로 전환하는 단계입니다. 하나의 Agent가 계획과 코드를 동시에 만들지 않고
+방법 추출, 설계, 구현 역할을 순차적으로 분리합니다.
+
+```text
+논문 요약 + Literature Review
+       │
+       ▼
+MethodExtractionAgent
+       │  알고리즘 / 수식 / 데이터 흐름 / pseudo-code 추출
+       ▼
+PrototypePlannerAgent
+       │  의존성 / 모듈 / 입출력 / 검증 시나리오 설계
+       ▼
+PrototypeWriterAgent
+       ├─ mock data 기반 실행 가능한 Python 코드
+       └─ 설치·실행·예상 결과를 담은 안내 문서
+```
+
+생성 코드는 외부 데이터가 없어도 구조를 확인할 수 있는 prototype을 목표로 합니다.
+
+### 5. 최종 보고서 구성
+
+`ProfessorAgent`가 앞 단계의 문헌 리뷰, 방법 추출, 구현 계획과 선택 평가 결과를 모아
+발표 또는 과제 제출에 사용할 수 있는 하나의 프로젝트 보고서로 재구성합니다.
+
+```text
+Literature Review ───────┐
+Method Extraction ──────┤
+Implementation Plan ────┼─ ProfessorAgent ── Final Project Report
+Reviewer Reports ───────┘
+```
+
+## 생성 파일
+
+모든 분석 결과를 Agent별 파일로 쪼개지 않고 하나의 보고서로 합칩니다.
+코드를 생성하지 않으면 파일은 `research_report.md` 하나뿐입니다.
+
+```text
+outputs/
+├── research_report.md          # 항상 생성
+└── prototype.py                # 코드 생성 옵션을 켠 경우만 생성
+```
+
+`research_report.md` 내부 구조:
+
+```text
+1. Paper Summaries
+2. Summary Quality Review
+3. Literature Review
+4. Critical Review
+5. Specialized Reviews       # 선택
+6. Implementation            # prototype 활성화 시
+   ├─ Extracted Methods
+   ├─ Implementation Plan
+   └─ Prototype Guide
+7. Final Synthesis            # 최종 보고 활성화 시
+```
+
+`prototype.py`는 보고서 안에 넣으면 실행하기 불편하기 때문에 코드 생성 옵션을 켰을 때만
+별도 Python 파일로 저장합니다. 설치법과 구현 계획은 다시 파일을 만들지 않고 보고서에 포함합니다.
+
+## 설치와 모델 설정
+
+Python 3.11 이상을 권장합니다.
 
 ```bash
-python -m paperagent run "여기에_찾아볼_논문_주제" --max-papers 3
+python -m venv .venv
+source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev]"
+cp .env.example .env
 ```
 
-## 3. 앞으로 구현해야 할 방향
+`.env`에서 사용할 provider 하나를 선택합니다. 실제 API 키가 들어 있는 `.env`는 Git에 올리지 않습니다.
 
-최종 목표는 AgentLaboratory처럼 여러 agent가 역할을 나누어 논문 조사, 평가, 구현 계획, 프로토타입, 보고서 작성을 수행하는 paper agent 시스템입니다.
+| Provider | `LLM_PROVIDER` | 필요한 설정 |
+|---|---|---|
+| Ollama | `ollama` | `LLM_MODEL`, `OLLAMA_URL` |
+| Anthropic | `anthropic` | `LLM_MODEL`, `ANTHROPIC_API_KEY` |
+| OpenAI | `openai` | `LLM_MODEL`, `OPENAI_API_KEY` |
+| Groq | `groq` | `LLM_MODEL`, `GROQ_API_KEY` |
+| LM Studio | `lmstudio` | `LLM_MODEL`, `LM_STUDIO_BASE_URL` |
+| EXAONE server | `exaone` | `LLM_MODEL`, `EXAONE_BASE_URL` |
 
-우선적으로 추가하면 좋은 agent:
+Reviewer 반복 조건도 `.env`에서 변경할 수 있습니다.
 
-1. `ReviewerAgent`
-   - 논문 요약이 원문 abstract/PDF 내용과 맞는지 평가하고 피드백을 주는 agent
+```env
+MIN_REVIEW_SCORE=7
+MAX_REVISION_ROUNDS=2
+```
 
-2. `PostdocAgent`
-   - 여러 논문 요약을 더 깊게 비교하고 연구 흐름, 공통 방법론, 빈틈을 정리하는 agent
+## CLI 실행
 
-3. `ProfessorAgent`
-   - 최종 보고서, README, paper draft를 정리하는 agent
+빠른 abstract 기반 확인:
 
-4. `NoveltyReviewerAgent` / `ImpactReviewerAgent`
-   - 기존 논문 대비 novelty, 연구 의의, 활용 가능성을 평가하는 agent
+```bash
+python -m paperagent run "LLM agents for scientific discovery" \
+  --max-papers 2 --no-prototype --no-report --abstract-only --quick-review --no-critic
+```
 
-5. `SWEngineerAgent` / `MLEngineerAgent`
-   - 생성된 prototype 코드를 정리하거나, 실제 실험 코드 구조로 발전시키는 agent
+전체 pipeline:
 
-구현할 때 기본 목표:
+```bash
+python -m paperagent run "paper agent for literature review" --max-papers 3
+```
 
-- `agents.py`에 agent class 추가
-- `workflow.py`에 agent 실행 단계 연결
-- 결과를 markdown 또는 code 파일로 저장
-- 가능하면 MCP tool 실행 결과에도 새 산출물 경로가 보이게 수정
+세 가지 전문 Reviewer까지 실행:
 
-자세한 후보 agent와 프로젝트 방향성은 `AGENT_ROADMAP.md`를 참고하세요.
+```bash
+python -m paperagent run "multi-agent research assistants" --max-papers 3 --extra-reviewers
+```
 
----------------------
+## Claude Desktop MCP 연결
 
-## 4. 과제 설명
+### 1. 프로젝트 준비
 
-### 과제 1. Claude Desktop 설치 및 MCP 연결 확인
+먼저 가상환경을 만들고 패키지를 설치한 뒤 `.env` 설정을 완료합니다.
 
-각자 Claude Desktop을 설치하고, `paperagent-merged` MCP 서버를 연결해보기
+```bash
+python -m venv .venv
+python -m pip install -e .
+```
 
-확인할 것:
+MCP 설정에는 Python과 서버 파일의 **절대경로**가 필요합니다.
 
-- Claude Desktop에서 `paperagent-merged` MCP tool이 보이는지
-- `paperagent-merged MCP 실행해줘`라고 입력했을 때 Claude가 주제/논문 개수/prototype 여부를 물어보는지
-- 답변 후 `run_paper_literature_review` tool이 호출되는지
-- 실행 결과 파일이 `outputs/`에 생성되는지
+- macOS/Linux 프로젝트 경로 확인: `pwd`
+- macOS/Linux Python 경로 확인: `which python`
+- Windows PowerShell 프로젝트 경로 확인: `(Get-Location).Path`
+- Windows PowerShell Python 경로 확인: `(Get-Command python).Source`
 
-### 과제 2. 각자 모델/API 연결 후 현재 코드 성능 확인
+### 2. Claude Desktop 설정 파일 열기
 
-각자 가능한 방식으로 LLM을 연결해서 현재 구현된 agent pipeline을 실행해보기
-
-확인할 것:
-
-- 논문 검색이 정상적으로 되는지
-- 논문 요약 품질이 괜찮은지
-- 최종 literature review가 쓸 만한지
-- `method_extraction.md`, `implementation_plan.md`, `prototype.py`가 실제로 도움이 되는지
-
-### 과제 3. 요약본/실행 흐름 다듬어오기
-
-현재 논문 요약본과 최종 literature review는 prompt가 임의로 작성되어있음 -> 다듬기 필요
-
-해볼 것:
-
-- 현재 나오는 결과 파일들을 보고 이해하기 쉽게 수정 (필요한 요소들은 추가하고, 불필요한 요소들은 삭제)
-- 결과 파일 생성 동시에 클로드 대화창에도 저장되었다는 알림과 리뷰 관련 정보 (~~이런 논문들을 찾았고 각각의 논문들 한줄요약?)이 뜨게 수정
-
-확인할 것:
-
-- `paper_summaries.md`가 읽기 쉬운지
-- `final_literature_review.md`가 한눈에 비교 가능한지
-- Claude Desktop 실행 결과가 사용자가 바로 이해할 수 있는지
-- 실행 방법 문서가 팀원이 따라하기 쉬운지
-
-### 과제 4. Agent 추가하기 (~6/24)
-
-현재 구현된 agent 위에 각자 다른 agent를 추가해서 AgentLaboratory와 비슷한 multi-agent 시스템으로 확장
-
-추가 후보 agent:
-
-| Agent | 역할 |
+| 운영체제 | 설정 파일 |
 |---|---|
-| `ReviewerAgent` | 논문 요약이 원문 abstract/PDF 내용과 맞는지 평가하고 피드백 생성 |
-| `PostdocAgent` | 여러 논문 요약을 비교해 연구 흐름, 공통 방법론, 빈틈 정리 |
-| `ProfessorAgent` | 최종 보고서, README, paper draft 형태로 결과 정리 |
-| `MLEngineerAgent` | 생성된 prototype을 실제 실험 코드 구조로 발전 |
-| `SWEngineerAgent` | 생성 코드 정리, 테스트 추가, 실행 구조 개선 |
-| `ExperimentReviewerAgent` | 실험 설계, metric, baseline, ablation이 충분한지 평가 |
-| `NoveltyReviewerAgent` | 기존 논문 대비 novelty와 차별점 평가 |
-| `ImpactReviewerAgent` | 연구 의의, 활용 가능성, 한계, impact 평가 |
-| `PaperSolver` | 문헌 리뷰와 결과를 논문 초안 형태로 작성 |
-| `MLESolver` | 실험 코드 생성/수정/실행 루프 담당 |
-| `AgentRxiv` | 읽은 논문, 요약, metadata를 저장하고 다시 검색 |
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Linux | Claude Desktop 배포 방식에 따라 설정 위치가 다르므로 앱의 Developer/MCP 설정에서 확인 |
 
-각자 구현 후 확인할 것:
+### 3. MCP 서버 등록
 
-- 새 agent가 기존 workflow에 자연스럽게 연결되는지
-- 새 agent의 결과물이 파일로 저장되는지
-- Claude MCP 실행 결과에서 새 산출물을 확인할 수 있는지
+macOS/Linux 예시:
+
+```json
+{
+  "mcpServers": {
+    "paperagent-mini": {
+      "command": "/absolute/path/to/paperagent-mini/.venv/bin/python",
+      "args": [
+        "/absolute/path/to/paperagent-mini/mcp_paperagent_server.py"
+      ]
+    }
+  }
+}
+```
+
+Windows 예시에서는 JSON의 역슬래시를 두 번 작성해야 합니다.
+
+```json
+{
+  "mcpServers": {
+    "paperagent-mini": {
+      "command": "C:\\absolute\\path\\paperagent-mini\\.venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\absolute\\path\\paperagent-mini\\mcp_paperagent_server.py"
+      ]
+    }
+  }
+}
+```
+
+API 키는 Claude Desktop JSON에 직접 넣지 않고 프로젝트의 `.env`에 저장합니다.
+
+### 4. 연결 확인
+
+Claude Desktop을 완전히 종료한 뒤 다시 시작하고 새 채팅에서 다음과 같이 요청합니다.
+
+```text
+paperagent-mini 실행해줘
+```
+
+MCP 연결이 정상이라면 채팅 안에 PaperAgent UI가 열립니다. UI에서 주제, 논문 수,
+prototype 생성 여부를 선택하면 pipeline이 실행됩니다.
+
+실행이 끝나면 다음 내용을 한 화면에서 확인할 수 있습니다.
+
+- Agent 단계별 진행 상태
+- 논문별 간단 요약 표
+- `outputs/research_report.md` 저장 경로
+- 선택한 경우 `outputs/prototype.py` 생성 여부
+
+UI 표는 보고서에 들어가는 논문별 Agent 요약을 짧게 재구성한 미리보기입니다.
+전체 내용은 `research_report.md`에서 확인합니다.
+
+MCP App 실행 중 오류가 발생하면 `outputs/.paperagent_ui_checkpoint.json`에 완료 단계가 임시 저장됩니다.
+화면의 `중단 지점부터 다시 실행`을 누르면 같은 주제와 옵션으로 검색·요약·검토 중 마지막으로 저장된
+지점부터 재개합니다. 정상 완료되면 체크포인트 파일은 자동으로 삭제됩니다.
+
+### UI를 수정할 때
+
+실행용 단일 HTML은 저장소에 포함되어 있습니다. UI 소스를 수정한 경우에만 다시 빌드합니다.
+
+```bash
+cd ui_mockup
+npm install
+npm run build
+```

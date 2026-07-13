@@ -10,7 +10,7 @@ import urllib.request
 from paperagent.config import get_settings
 
 OPENAI_MODEL_NAME = "gpt-4o-mini"
-LOCAL_MODEL_NAME = "qwen2.5:7b"
+LOCAL_MODEL_NAME = "qwen3:8b"
 GROQ_MODEL_NAME = "llama-3.3-70b-versatile"
 EXAONE_MODEL_NAME = "exaone"
 
@@ -31,6 +31,21 @@ def ask_llm(system_prompt: str, user_prompt: str, model: str | None = None) -> s
             api_key=os.getenv("OPENAI_API_KEY"),
             missing_key_name="OPENAI_API_KEY",
         )
+    if provider == "anthropic":
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise RuntimeError("ANTHROPIC_API_KEY is required for the selected LLM provider.")
+        from anthropic import Anthropic
+
+        client = Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model=model,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_prompt}],
+            max_tokens=4096,
+            temperature=0.2,
+        )
+        return "".join(block.text for block in response.content if block.type == "text")
     if provider == "lmstudio":
         return ask_openai_compatible(
             system_prompt,
@@ -59,7 +74,9 @@ def ask_llm(system_prompt: str, user_prompt: str, model: str | None = None) -> s
             missing_key_name="EXAONE_API_KEY",
         )
 
-    raise ValueError("LLM_PROVIDER must be one of: openai, ollama, lmstudio, groq, exaone")
+    raise ValueError(
+        "LLM_PROVIDER must be one of: anthropic, openai, ollama, lmstudio, groq, exaone"
+    )
 
 
 def ask_openai_compatible(
@@ -118,6 +135,8 @@ def ask_ollama(system_prompt: str, user_prompt: str, model: str) -> str:
 
 
 def _default_model(provider: str) -> str:
+    if provider == "anthropic":
+        return "claude-haiku-4-5"
     if provider == "openai":
         return OPENAI_MODEL_NAME
     if provider == "groq":

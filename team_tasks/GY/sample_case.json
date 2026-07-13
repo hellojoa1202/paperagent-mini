@@ -1,0 +1,4 @@
+{
+  "title": "Attention Is All You Need",
+  "abstract": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks. We propose the Transformer, a model architecture based solely on attention mechanisms. Experiments on machine translation show improved quality while being more parallelizable and requiring less training time."
+}
