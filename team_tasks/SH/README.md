@@ -18,11 +18,17 @@ python -m pytest team_tasks/SH/test_prototype_reviewer.py
 
 ## 할 일
 
-1. syntax, timeout, runtime error, 불필요한 무거운 dependency 검사 강화
-2. 실패 원인을 PrototypeReviewerAgent가 짧고 정확하게 Writer에게 전달하도록 prompt 개선
-3. 최대 1회 수정만으로 성공률을 높이기
-4. 성공률, 평균 수정 횟수, timeout 비율 기록
-5. 정상 코드 3개와 오류 코드 3개 이상으로 테스트
+1. syntax error 검사
+2. runtime error 검사
+3. timeout 검사
+4. 금지 dependency 검사
+5. 실패 원인을 PrototypeReviewerAgent가 Writer에게 전달하는 prompt 개선
+6. 자동 수정은 최대 1회만 허용
+7. 정상 코드 3개와 오류 코드 3개로 테스트
+8. 성공률과 실패 유형을 이 README 하단에 표로 기록
+
+Docker 수준의 완전한 sandbox나 여러 번의 자동 수정은 범위에서 제외합니다. 정적 검사까지는 필수이고,
+실제 실행 검사는 안전한 개인 실습 환경에서만 수행합니다.
 
 ## 완료 기준
 
@@ -30,6 +36,7 @@ python -m pytest team_tasks/SH/test_prototype_reviewer.py
 - 실행 검사를 선택했을 때 exit code와 stderr를 보존함
 - 실패한 코드가 한 번의 feedback으로 수정되는 예시가 있음
 - 무한 수정 loop가 발생하지 않음
+- 정상·오류 샘플 총 6개의 검사 결과가 README에 있음
 
 ## 통합 계약
 

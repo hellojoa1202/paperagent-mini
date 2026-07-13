@@ -16,10 +16,16 @@ python -m pytest team_tasks/JM/test_research_gap_agent.py
 ## 할 일
 
 1. `ResearchGapAgent.propose()` prompt 개선
-2. 각 제안에 가설, baseline, metric, ablation, risk, 근거 논문 포함
+2. 가설, baseline, metric, ablation, risk, 근거 논문 형식 고정
 3. 1~2주 안에 가능한 토이 실험을 우선하도록 조정
-4. 막연하거나 서로 중복되는 제안을 탐지하는 validator 추가
-5. qwen3:8b 기준으로 최소 3개 주제 실험
+4. 필수 필드 누락 검사
+5. 동일한 제안 반복 검사
+6. 서로 다른 주제 3개로 실험
+7. 좋은 제안과 좋지 않은 제안을 각각 1개 골라 이유 작성
+8. 결과를 이 README 하단에 표로 기록
+
+새 Agent는 `ResearchGapAgent` 하나만 구현합니다. 여러 Agent의 토론, 자동 ranking, 외부 논문 추가
+검색은 범위에서 제외합니다.
 
 ## 완료 기준
 
@@ -27,6 +33,7 @@ python -m pytest team_tasks/JM/test_research_gap_agent.py
 - 모든 제안에 근거 논문이 있음
 - baseline과 metric이 빠지지 않음
 - 같은 아이디어를 표현만 바꿔 반복하지 않음
+- 세 주제의 결과와 간단한 품질 평가가 README에 있음
 
 ## 통합 계약
 

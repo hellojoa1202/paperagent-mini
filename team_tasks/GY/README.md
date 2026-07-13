@@ -17,17 +17,23 @@ python -m pytest team_tasks/GY/test_summary_quality.py
 
 ## 할 일
 
-1. `build_summary_prompt()`와 `build_review_prompt()` 개선
-2. 정확성, 누락, 구체성, 명료성, hallucination risk 평가 기준 보정
-3. 최소 3개 논문으로 수정 전·후 점수 비교
-4. 점수만 올리기 위한 장황한 요약이 되지 않는지 확인
-5. 테스트와 짧은 실험 결과를 이 README 하단에 기록
+1. `build_summary_prompt()` 개선
+2. `build_review_prompt()` 개선
+3. 정확성, 누락, 구체성, 명료성, hallucination risk 평가 기준 보정
+4. 동일 논문에 대해 수정 전·후 점수를 자동 비교
+5. 논문 3개로 반복 실험
+6. 점수만 올리기 위한 장황한 요약이 되지 않는지 확인
+7. 테스트 3개 이상 작성
+8. 논문별 `최초 점수 → 수정 점수`를 이 README 하단에 표로 기록
+
+모델 비교, arXiv 검색, UI 수정은 범위에서 제외합니다. 요약과 Reviewer 성능에만 집중합니다.
 
 ## 완료 기준
 
 - 평균 점수가 재작성 후 상승하거나, 오르지 않은 사례의 원인이 설명됨
 - Reviewer feedback이 원문 근거와 수정 위치를 구체적으로 지시함
 - 중국어, 중복 섹션, 근거 없는 수치가 결과에 남지 않음
+- 실행 결과 표 3행과 실패 사례 설명 1개가 README에 있음
 
 ## 통합 계약
 
