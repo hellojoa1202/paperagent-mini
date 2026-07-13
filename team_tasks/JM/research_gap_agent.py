@@ -2,7 +2,27 @@
 
 from __future__ import annotations
 
+import re
+from dataclasses import dataclass
+
 from paperagent.agents import BaseAgent
+
+
+RESEARCH_GAP_STEP = "research_gap"
+NEXT_EXPERIMENTS_HEADING = "## Next Experiments"
+
+
+@dataclass(frozen=True)
+class ResearchGapStageResult:
+    text: str
+    issues: tuple[str, ...]
+
+    @property
+    def passed(self) -> bool:
+        return not self.issues
+
+    def checkpoint_value(self) -> dict[str, str]:
+        return {"step": RESEARCH_GAP_STEP, "text": self.text}
 
 
 class ResearchGapAgent(BaseAgent):
@@ -49,3 +69,27 @@ def validate_gap_output(text: str, expected_count: int) -> list[str]:
         if text.count(f"- {field}:") < expected_count:
             issues.append(f"필드 누락: {field}")
     return issues
+
+
+def run_research_gap_stage(topic: str, literature_text: str, count: int = 3) -> ResearchGapStageResult:
+    """Standalone contract for the workflow step JM will integrate."""
+    text = ResearchGapAgent().propose(topic, literature_text, count)
+    return ResearchGapStageResult(text=text, issues=tuple(validate_gap_output(text, count)))
+
+
+def append_next_experiments(report_text: str, gap_text: str) -> str:
+    """Insert or replace one Next Experiments section without creating another file."""
+    section = f"{NEXT_EXPERIMENTS_HEADING}\n\n{gap_text.strip()}"
+    existing = re.compile(
+        rf"{re.escape(NEXT_EXPERIMENTS_HEADING)}\n.*?(?=\n## |\Z)",
+        flags=re.DOTALL,
+    )
+    if existing.search(report_text):
+        return existing.sub(section, report_text).rstrip() + "\n"
+
+    insertion_points = ("## 6. Implementation", "## 7. Final Synthesis", "## Final Synthesis")
+    for heading in insertion_points:
+        marker = f"\n{heading}"
+        if marker in report_text:
+            return report_text.replace(marker, f"\n{section}\n\n{heading}", 1).rstrip() + "\n"
+    return f"{report_text.rstrip()}\n\n{section}\n"

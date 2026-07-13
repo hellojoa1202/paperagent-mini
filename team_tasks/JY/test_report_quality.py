@@ -1,4 +1,9 @@
-from team_tasks.JY.report_quality import build_report_prompt, check_report
+from team_tasks.JY.report_quality import (
+    build_critic_prompt,
+    build_postdoc_prompt,
+    build_professor_prompt,
+    check_report,
+)
 
 
 def test_detects_cjk_and_duplicate_lines() -> None:
@@ -9,6 +14,16 @@ def test_detects_cjk_and_duplicate_lines() -> None:
 
 
 def test_prompt_forbids_fabrication_and_cjk() -> None:
-    prompt = build_report_prompt("topic", "source")
-    assert "한자" in prompt
-    assert "만들지 않기" in prompt
+    prompts = (
+        build_postdoc_prompt("topic", "source"),
+        build_critic_prompt("topic", "source"),
+        build_professor_prompt("topic", "source"),
+    )
+    assert all("한자" in prompt for prompt in prompts)
+    assert all("만들지 않기" in prompt for prompt in prompts)
+
+
+def test_each_agent_prompt_has_its_own_job() -> None:
+    assert "Paper comparison" in build_postdoc_prompt("topic", "source")
+    assert "문제 위치 / 이유 / 수정 제안" in build_critic_prompt("topic", "source")
+    assert "Final Synthesis" in build_professor_prompt("topic", "source")

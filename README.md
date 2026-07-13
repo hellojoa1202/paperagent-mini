@@ -54,8 +54,8 @@ Claude Desktop ─ MCP
 |---|---|---|
 | GY | [`team_tasks/GY`](./team_tasks/GY/) | 요약·Reviewer reflection 성능 개선 |
 | SH | [`team_tasks/SH`](./team_tasks/SH/) | prototype 검증과 실패 시 수정 |
-| JM | [`team_tasks/JM`](./team_tasks/JM/) | research gap과 후속 실험 제안 |
-| JY | [`team_tasks/JY`](./team_tasks/JY/) | 최종 보고서 prompt와 형식 품질 개선 |
+| JM | [`team_tasks/JM`](./team_tasks/JM/) | ResearchGapAgent 구현 및 pipeline 통합 |
+| JY | [`team_tasks/JY`](./team_tasks/JY/) | Postdoc·Critic·Professor prompt와 보고서 개선 |
 
 UI와 MCP 연결은 완료 범위이므로 팀 과제에서 수정하지 않습니다. 상세 실행법과 완료 기준은 각 폴더의
 README에 있습니다.
