@@ -1,103 +1,70 @@
-"""Prompt laboratory for improving PaperReader/Reviewer reflection quality."""
+"""요약 개선을 확인하는 스크립트.
+
+prompt는 src/paperagent/agents.py에서 고치고, 여기서는 그 실제 agent를 그대로 불러
+요약 → 리뷰 → 재작성이 점수를 올리는지만 본다. (prompt를 여기 또 복사하지 않는다.)
+"""
 
 from __future__ import annotations
 
-import json
 from dataclasses import asdict, dataclass
 
-from paperagent.agents import strip_code_fence
-from paperagent.llm import ask_llm
+from paperagent.agents import PaperReaderAgent, ReviewerAgent, ReviewVerdict
 
 
 @dataclass(frozen=True)
-class QualityScore:
-    accuracy: int
-    coverage: int
-    specificity: int
-    clarity: int
-    hallucination_risk: int
-    feedback: str
+class _PaperShim:
+    """search_arxiv 결과 대신 title/abstract만으로 실제 agent를 호출하기 위한 최소 객체."""
 
-    @property
-    def total(self) -> float:
-        positive = self.accuracy + self.coverage + self.specificity + self.clarity
-        return round((positive + (10 - self.hallucination_risk)) / 5, 2)
+    title: str
+    summary: str  # arXiv 결과의 abstract 필드 이름과 동일하게 맞춘다.
+
+    def get_short_id(self) -> str:
+        return "local-sample"
 
 
-def build_summary_prompt(title: str, abstract: str, feedback: str = "") -> str:
-    """This is the main prompt GY should tune and compare."""
-    return f"""
-논문 제목: {title}
-원문 초록: {abstract}
-이전 Reviewer 피드백: {feedback or "없음"}
+def run_reflection(
+    title: str,
+    abstract: str,
+    topic: str = "paper agent for literature review",
+    full_text: str | None = None,
+) -> dict[str, object]:
+    """첫 요약과 피드백 반영 후 요약의 Reviewer 점수를 비교한다.
 
-원문에 있는 사실만 사용하여 한국어 요약을 작성하세요.
-각 섹션은 1~3개의 짧은 불릿으로 작성합니다.
+    반환값의 ``best_*`` 는 두 요약 중 점수가 높은 쪽을 채택한 결과로,
+    src pipeline의 best-of 재작성 로직과 동일한 기준을 사용한다.
+    """
+    paper = _PaperShim(title=title, summary=abstract)
+    text = full_text or abstract
 
-## Problem
-## Key idea
-## Method
-## Experiments or evidence
-## Limitations
-""".strip()
+    reader = PaperReaderAgent(topic=topic)
+    reviewer = ReviewerAgent()
 
+    first = reader.summarize_paper(paper, text)
+    before = reviewer.review_summary(first, text)
 
-def build_review_prompt(abstract: str, summary: str) -> str:
-    return f"""
-원문 초록:
-{abstract}
-
-평가할 요약:
-{summary}
-
-다음 JSON 형식만 반환하세요. 모든 점수는 1~10입니다.
-{{
-  "accuracy": 1,
-  "coverage": 1,
-  "specificity": 1,
-  "clarity": 1,
-  "hallucination_risk": 1,
-  "feedback": "근거가 있는 구체적인 수정 지시"
-}}
-""".strip()
-
-
-def generate_summary(title: str, abstract: str, feedback: str = "") -> str:
-    return ask_llm(
-        "You are PaperReaderAgent. Use Korean and necessary English terms only.",
-        build_summary_prompt(title, abstract, feedback),
+    revised = reader.summarize_paper(
+        paper, text, revision_round=1, reviewer_feedback=before.feedback
     )
+    after = reviewer.review_summary(revised, text)
 
+    best_is_revised = after.score >= before.score
+    best_summary = revised if best_is_revised else first
+    best_score = after if best_is_revised else before
 
-def score_summary(abstract: str, summary: str) -> QualityScore:
-    raw = ask_llm(
-        "You are a strict ReviewerAgent. Judge only against the supplied abstract.",
-        build_review_prompt(abstract, summary),
-    )
-    data = json.loads(strip_code_fence(raw))
-    return QualityScore(
-        accuracy=_score(data, "accuracy"),
-        coverage=_score(data, "coverage"),
-        specificity=_score(data, "specificity"),
-        clarity=_score(data, "clarity"),
-        hallucination_risk=_score(data, "hallucination_risk"),
-        feedback=str(data.get("feedback", "")).strip(),
-    )
-
-
-def run_reflection(title: str, abstract: str) -> dict[str, object]:
-    first = generate_summary(title, abstract)
-    before = score_summary(abstract, first)
-    revised = generate_summary(title, abstract, before.feedback)
-    after = score_summary(abstract, revised)
     return {
-        "first_summary": first,
-        "first_score": asdict(before) | {"total": before.total},
-        "revised_summary": revised,
-        "revised_score": asdict(after) | {"total": after.total},
-        "improvement": round(after.total - before.total, 2),
+        "first_summary": first.summary,
+        "first_score": _verdict_dict(before),
+        "revised_summary": revised.summary,
+        "revised_score": _verdict_dict(after),
+        "improvement": after.score - before.score,
+        "adopted": "revised" if best_is_revised else "first",
+        "best_summary": best_summary.summary,
+        "best_score": _verdict_dict(best_score),
     }
 
 
-def _score(data: dict[str, object], key: str) -> int:
-    return max(1, min(10, int(data.get(key, 1))))
+def _verdict_dict(verdict: ReviewVerdict) -> dict[str, object]:
+    data = asdict(verdict)
+    data["strengths"] = list(verdict.strengths)
+    data["weaknesses"] = list(verdict.weaknesses)
+    return data

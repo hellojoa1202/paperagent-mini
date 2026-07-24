@@ -19,12 +19,12 @@ def main() -> None:
     count = int(os.getenv("RESEARCH_GAP_COUNT", "3"))
     result = run_research_gap_stage(args.topic, args.report.read_text(encoding="utf-8"), count)
     if args.full_report:
-        output_text = append_next_experiments(
-            args.full_report.read_text(encoding="utf-8"),
-            result.text,
-        )
+        base_report = args.full_report.read_text(encoding="utf-8")
     else:
-        output_text = result.text
+        base_report = "# Research Report\n"
+
+    output_text = append_next_experiments(base_report, result.text)
+
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(output_text, encoding="utf-8")
     print(f"saved: {args.output}")

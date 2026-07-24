@@ -30,3 +30,24 @@ python team_tasks/GY/run_quality.py team_tasks/GY/sample_case.json
 ```
 
 작업이 끝나면 `3rd-GY` 브랜치에 push하고 조아에게 알려주세요.
+
+## 확인 결과 (GY)
+
+prompt는 `src/paperagent/agents.py`에서 수정했습니다.
+
+- 요약은 원문에 있는 수치·데이터셋만 쓰고, 없는 항목은 "원문에 명시되지 않음"으로 적도록 했습니다.
+- Reviewer는 1~10 채점 기준을 주고, 어느 부분이 왜 틀렸는지 짚는 feedback을 내도록 했습니다.
+- 재작성이 오히려 나빠지는 경우가 있어, `workflow.py`가 마지막 draft 대신 점수가 가장 높은 draft를 채택하도록 했습니다.
+
+논문 2편(Attention, BERT)을 Claude로 돌려 확인했습니다.
+
+- BERT 요약이 GLUE 80.5%, SQuAD 93.2/83.1 같은 수치를 원문 그대로 가져왔고, 초록에 없는 한계는 지어내지 않았습니다.
+- 두 편 모두 첫 요약 8점에서 재작성 7점으로 조금 떨어졌지만, 점수가 높은 draft를 채택하는 로직 덕분에 8점 요약이 그대로 쓰였습니다.
+- 재작성으로 점수가 오르는 경우는 `test_summary_quality.py`에 테스트로 남겨 두었습니다.
+
+```bash
+python team_tasks/GY/run_quality.py team_tasks/GY/sample_case.json     # Attention
+python team_tasks/GY/run_quality.py team_tasks/GY/sample_case2.json    # BERT
+```
+
+API 키는 repo 루트 `.env`에 넣어야 합니다. `get_settings()`가 루트 `.env`를 다시 읽어 그 값을 우선 사용합니다.
