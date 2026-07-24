@@ -1,0 +1,42 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+
+# Build files
+build/
+dist/
+*.egg-info/
+ui_mockup/node_modules/
+!ui_mockup/dist/
+ui_mockup/dist/*
+!ui_mockup/dist/index.html
+
+# Test caches
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# Generated output
+outputs/*
+!outputs/.gitkeep
+!outputs/example/
+!outputs/example/**
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
