@@ -5,7 +5,7 @@
 
 ## 실행 예시
 
-<!-- PaperAgent 실행 화면 이미지 한 장을 여기에 추가 -->
+<img width="2048" height="1251" alt="제목 없는 디자인" src="https://github.com/user-attachments/assets/147b0c57-fdeb-46b1-8881-3e7e44f346ac" />
 
 ## 전체 구조
 
